@@ -58,7 +58,7 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
     }
 
     /**
-     * Create a new instance of Zend_Log_Writer_Firebug
+     * Create a new instance of Zend_Log_Writer_FDebug
      *
      * @param  array|Zend_Config $config
      * @return Zend_Log_Writer_Firebug
@@ -92,7 +92,7 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
     }
 
     /**
-     * Log a message to the Firebug Console.
+     * Log a message to the fDebug Console.
      *
      * @param array $event The event data
      * @return void
@@ -117,7 +117,7 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 	}
 
 	 /**
-     * Remove reference to database adapter
+     * Close socket from fDebug
      *
      * @return void
      */
@@ -134,7 +134,7 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 		$this->_fDebug = $fDebug;
 	}
 	/**
-	 * @return fDebug|null
+	 * @return fDebug
 	 */
 	public function getFDebug()
 	{
