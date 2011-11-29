@@ -5,21 +5,24 @@
  * Date: 28.11.11
  */
 
-class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
+class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract
+{
 
     /**
      * Maps logging priorities to logging display styles
      *
      * @var array
      */
-    protected $_priorityStyles = array(Zend_Log::EMERG  => fDebug::FATAL,
-                                       Zend_Log::ALERT  => fDebug::FATAL,
-                                       Zend_Log::CRIT   => fDebug::FATAL,
-                                       Zend_Log::ERR    => fDebug::ERROR,
-                                       Zend_Log::WARN   => fDebug::WARNING,
-                                       Zend_Log::NOTICE => fDebug::MESSAGE,
-                                       Zend_Log::INFO   => fDebug::MESSAGE,
-                                       Zend_Log::DEBUG  => fDebug::MESSAGE);
+    protected $_priorityStyles = array(
+        Zend_Log::EMERG => fDebug::FATAL,
+        Zend_Log::ALERT => fDebug::FATAL,
+        Zend_Log::CRIT => fDebug::FATAL,
+        Zend_Log::ERR => fDebug::ERROR,
+        Zend_Log::WARN => fDebug::WARNING,
+        Zend_Log::NOTICE => fDebug::MESSAGE,
+        Zend_Log::INFO => fDebug::MESSAGE,
+        Zend_Log::DEBUG => fDebug::MESSAGE
+    );
 
     /**
      * The default logging style for un-mapped priorities
@@ -27,24 +30,32 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
      * @var string
      */
     protected $_defaultPriorityStyle = fDebug::MESSAGE;
-	/**
+    /**
      * Flag indicating whether the log writer is enabled
      *
      * @var boolean
      */
     protected $_enabled = true;
-	/**
-	 * @var fDebug
-	 */
-	protected $_fDebug = null;
-
-	protected $_port = '5005';
-
-	protected $_host = 'localhost';
-
-	protected $_url = '/';
-
-	protected $_remoteIP = '';
+    /**
+     * @var fDebug
+     */
+    protected $_fDebug = null;
+    /**
+     * @var string
+     */
+    protected $_port = '5005';
+    /**
+     * @var string
+     */
+    protected $_host = 'localhost';
+    /**
+     * @var string
+     */
+    protected $_url = '/';
+    /**
+     * @var string
+     */
+    protected $_remoteIP = '';
 
     /**
      * Class constructor
@@ -53,8 +64,8 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
      */
     public function __construct($ip)
     {
-		$this->_remoteIP = $ip;
-		$this->_formatter = new Zend_Log_Formatter_Simple();
+        $this->_remoteIP = $ip;
+        $this->_formatter = new Zend_Log_Formatter_Simple();
     }
 
     /**
@@ -66,11 +77,20 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
     static public function factory($config)
     {
         $config = self::_parseConfig($config);
-		if(!isset($config['remoteIP'])) {
-			throw new InvalidArgumentException();
-		}
+        if (!isset($config['remoteIP'])) {
+            throw new InvalidArgumentException();
+        }
 
-		$instance = new self($config['remoteIP']);
+        $instance = new self($config['remoteIP']);
+
+        foreach ($config as $key => $value) {
+            if (method_exists($instance, 'set' . ucfirst($key))) {
+                $instance->{'set' . ucfirst($key)}($value);
+            }
+        }
+
+        $instance->connect();
+
 		return $instance;
     }
 
@@ -105,51 +125,101 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
      */
     protected function _write($event)
     {
-		if (!$this->getEnabled()) {
+        if (!$this->getEnabled()) {
             return;
         }
 
-        if (array_key_exists($event['priority'],$this->_priorityStyles)) {
+        if (array_key_exists($event['priority'], $this->_priorityStyles)) {
             $type = $this->_priorityStyles[$event['priority']];
         } else {
             $type = $this->_defaultPriorityStyle;
         }
 
-		if($this->getFDebug() instanceof fDebug) {
-			$line = $this->_formatter->format($event);
-			$method = 'send'.ucfirst(strtolower($type));
-			$this->getFDebug()->{$method}($line);
-		}
-	}
+        if ($this->getFDebug() instanceof fDebug) {
+            $line = $this->_formatter->format($event);
+            $method = 'send' . ucfirst(strtolower($type));
+            $this
+                    ->getFDebug()
+                    ->{$method}($line);
+        }
+    }
 
-	 /**
+    /**
      * Close socket from fDebug
      *
      * @return void
      */
     public function shutdown()
     {
-        $this->getFDebug()->closeSocket();
+        $this
+                ->getFDebug()
+                ->closeSocket();
     }
-	/**
-	 * @param fDebug $fDebug
-	 * @return void
-	 */
-	public function setFDebug(fDebug $fDebug)
-	{
-		$this->_fDebug = $fDebug;
-	}
-	/**
-	 * @return fDebug
-	 */
-	public function getFDebug()
-	{
-		if($this->_fDebug === null) {
-			$this->_fDebug = fDebug::getInstance();
-			$this->_fDebug->setSession($this->_host,$this->_url);
-			$this->_fDebug->openSocket($this->_remoteIP,$this->_port);
-		}
-		return $this->_fDebug;
-	}
+
+    /**
+     * @param fDebug $fDebug
+     * @return void
+     */
+    public function setFDebug(fDebug $fDebug)
+    {
+        $this->_fDebug = $fDebug;
+    }
+
+    /**
+     * @return fDebug
+     */
+    public function getFDebug()
+    {
+        if ($this->_fDebug === null) {
+            $this->_fDebug = fDebug::getInstance();
+        }
+        return $this->_fDebug;
+    }
+
+    public function connect()
+    {
+        $this->getFDebug()->setSession($this->getHost(), $this->getUrl());
+        $this->getFDebug()->openSocket($this->getRemoteIP(), $this->getPort());
+    }
+
+    public function setHost($host)
+    {
+        $this->_host = $host;
+    }
+
+    public function getHost()
+    {
+        return $this->_host;
+    }
+
+    public function setPort($port)
+    {
+        $this->_port = $port;
+    }
+
+    public function getPort()
+    {
+        return $this->_port;
+    }
+
+    public function setRemoteIP($remoteIP)
+    {
+        $this->_remoteIP = $remoteIP;
+    }
+
+    public function getRemoteIP()
+    {
+        return $this->_remoteIP;
+    }
+
+    public function setUrl($url)
+    {
+        $this->_url = $url;
+    }
+
+    public function getUrl()
+    {
+        return $this->_url;
+    }
 
 }

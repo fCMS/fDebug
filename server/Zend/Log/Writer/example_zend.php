@@ -19,22 +19,19 @@ $autoloader->setFallbackAutoloader(true);
 
 require_once 'fdebug.lib.php';
 
-/*$fdebug = fDebug::getInstance();
-$fdebug->setSession('localhost', '/');
-$fdebug->openSocket('127.0.0.1', 5005);*/
-
 $config = array(
 	'fDebug'	=> fDebug::getInstance(),
 	'host'		=> 'localhost',
-	'url'		=> 'url',
+	'url'		=> '/',
 	'remoteIP'	=> '127.0.0.1',
-	'remotePort'=> '5005'
+	'port'=> '5005'
 );
 
 //create writer model
-$writer = new Zend_Log_Writer_FDebug('127.0.0.1');
+$logger = Zend_Log::factory(array(array('writerName' => 'FDebug', 'writerParams' => $config)));
 //set up logger with writer, if you would like to have more than one writer
 //use $logger->addWriter();
-$logger = new Zend_Log($writer);
 
-//$logger->log("Karls Test",Zend_Log::DEBUG);
+$logger->log("Karls Test",Zend_Log::DEBUG);
+$logger->log("Karls Test",Zend_Log::DEBUG);
+$logger->log("Karls Test",Zend_Log::DEBUG);
