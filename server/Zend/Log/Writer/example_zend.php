@@ -6,17 +6,35 @@
  */
 
 // I assume you have Zend Framework in your include path in your PEAR installation
-require_once 'FDebug.php';
-require_once 'Zend/Log.php';
-require_once '../../../../server/php/fdebug.lib.php';
+define('APPLICATION_PATH', '../../../../server');
+// Ensure php/ is on include_path
+set_include_path(implode(PATH_SEPARATOR, array(
+	realpath(APPLICATION_PATH),
+    realpath(APPLICATION_PATH . '/php'),
+    get_include_path(),
+)));
+require_once 'Zend/Loader/Autoloader.php';
+$autoloader = Zend_Loader_Autoloader::getInstance();
+$autoloader->setFallbackAutoloader(true);
 
-$fdebug = fDebug::getInstance();
+require_once 'fdebug.lib.php';
+
+/*$fdebug = fDebug::getInstance();
 $fdebug->setSession('localhost', '/');
-$fdebug->openSocket('127.0.0.1', 5005);
+$fdebug->openSocket('127.0.0.1', 5005);*/
 
-$writer = new Zend_Log_Writer_FDebug();
-$writer->setFDebug($fdebug);
+$config = array(
+	'fDebug'	=> fDebug::getInstance(),
+	'host'		=> 'localhost',
+	'url'		=> 'url',
+	'remoteIP'	=> '127.0.0.1',
+	'remotePort'=> '5005'
+);
 
+//create writer model
+$writer = new Zend_Log_Writer_FDebug('127.0.0.1');
+//set up logger with writer, if you would like to have more than one writer
+//use $logger->addWriter();
 $logger = new Zend_Log($writer);
 
-$logger->log("Karls Test",Zend_Log::DEBUG);
+//$logger->log("Karls Test",Zend_Log::DEBUG);

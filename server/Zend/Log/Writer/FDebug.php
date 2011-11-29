@@ -5,15 +5,6 @@
  * Date: 28.11.11
  */
 
-/** Zend_Log_Writer_Abstract */
-require_once 'Zend/Log/Writer/Abstract.php';
-
-/** Zend_Log_Formatter_Simple */
-require_once 'Zend/Log/Formatter/Simple.php';
-
-/** Zend_Log */
-require_once 'Zend/Log.php';
-
 class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 
     /**
@@ -47,13 +38,22 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 	 */
 	protected $_fDebug = null;
 
+	protected $_port = '5005';
+
+	protected $_host = 'localhost';
+
+	protected $_url = '/';
+
+	protected $_remoteIP = '';
+
     /**
      * Class constructor
      *
      * @return void
      */
-    public function __construct(array $params = array())
+    public function __construct($ip)
     {
+		$this->_remoteIP = $ip;
 		$this->_formatter = new Zend_Log_Formatter_Simple();
     }
 
@@ -65,7 +65,13 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
      */
     static public function factory($config)
     {
-        return new self(self::_parseConfig($config));
+        $config = self::_parseConfig($config);
+		if(!isset($config['remoteIP'])) {
+			throw new InvalidArgumentException();
+		}
+
+		$instance = new self($config['remoteIP']);
+		return $instance;
     }
 
     /**
@@ -140,6 +146,8 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 	{
 		if($this->_fDebug === null) {
 			$this->_fDebug = fDebug::getInstance();
+			$this->_fDebug->setSession($this->_host,$this->_url);
+			$this->_fDebug->openSocket($this->_remoteIP,$this->_port);
 		}
 		return $this->_fDebug;
 	}
