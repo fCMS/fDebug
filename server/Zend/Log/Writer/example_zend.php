@@ -5,7 +5,7 @@
  * Date: 28.11.11
  */
 
-// I assume you have Zend Framework in your include path.
+// I assume you have Zend Framework in your include path in your PEAR installation
 require_once 'FDebug.php';
 require_once 'Zend/Log.php';
 require_once '../../../../server/php/fdebug.lib.php';

@@ -11,9 +11,32 @@ require_once 'Zend/Log/Writer/Abstract.php';
 /** Zend_Log_Formatter_Simple */
 require_once 'Zend/Log/Formatter/Simple.php';
 
+/** Zend_Log */
+require_once 'Zend/Log.php';
+
 class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 
     /**
+     * Maps logging priorities to logging display styles
+     *
+     * @var array
+     */
+    protected $_priorityStyles = array(Zend_Log::EMERG  => fDebug::FATAL,
+                                       Zend_Log::ALERT  => fDebug::FATAL,
+                                       Zend_Log::CRIT   => fDebug::FATAL,
+                                       Zend_Log::ERR    => fDebug::ERROR,
+                                       Zend_Log::WARN   => fDebug::WARNING,
+                                       Zend_Log::NOTICE => fDebug::MESSAGE,
+                                       Zend_Log::INFO   => fDebug::MESSAGE,
+                                       Zend_Log::DEBUG  => fDebug::MESSAGE);
+
+    /**
+     * The default logging style for un-mapped priorities
+     *
+     * @var string
+     */
+    protected $_defaultPriorityStyle = fDebug::MESSAGE;
+	/**
      * Flag indicating whether the log writer is enabled
      *
      * @var boolean
@@ -76,11 +99,20 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
      */
     protected function _write($event)
     {
-		if(!$this->_enabled) return;
+		if (!$this->getEnabled()) {
+            return;
+        }
+
+        if (array_key_exists($event['priority'],$this->_priorityStyles)) {
+            $type = $this->_priorityStyles[$event['priority']];
+        } else {
+            $type = $this->_defaultPriorityStyle;
+        }
 
 		if($this->getFDebug() instanceof fDebug) {
 			$line = $this->_formatter->format($event);
-			$this->getFDebug()->sendMessage($line);
+			$method = 'send'.ucfirst(strtolower($type));
+			$this->getFDebug()->{$method}($line);
 		}
 	}
 
@@ -106,6 +138,9 @@ class Zend_Log_Writer_FDebug extends Zend_Log_Writer_Abstract {
 	 */
 	public function getFDebug()
 	{
+		if($this->_fDebug === null) {
+			$this->_fDebug = fDebug::getInstance();
+		}
 		return $this->_fDebug;
 	}
 
